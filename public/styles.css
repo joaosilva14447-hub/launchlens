@@ -157,7 +157,7 @@ body::before {
 }
 
 .hero {
-  padding: 52px 0 28px;
+  padding: 64px 0 28px;
 }
 
 .hero-grid {
@@ -581,7 +581,7 @@ body::before {
 }
 
 .board {
-  padding: 24px 0 48px;
+  padding: 32px 0 48px;
 }
 
 .board-grid {
@@ -821,7 +821,7 @@ body::before {
 .detail-panel {
   min-height: 640px;
   position: sticky;
-  top: 94px;
+  top: 108px;
 }
 
 .detail-empty h3 {
@@ -837,10 +837,13 @@ body::before {
 
 .detail-top {
   align-items: center;
+  gap: 16px;
 }
 
 .detail-headline {
   align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .detail-logo {
@@ -853,6 +856,22 @@ body::before {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
+}
+
+.detail-title {
+  min-width: 0;
+}
+
+.detail-title h3 {
+  line-height: 1.05;
+}
+
+.detail-nameplate {
+  margin: 6px 0 0;
+  color: #dce7f0;
+  font-size: 0.96rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
 }
 
 .detail-block {

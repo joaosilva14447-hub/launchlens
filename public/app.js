@@ -225,15 +225,15 @@ function renderTokenGrid() {
               <strong>${formatUsd(token.liquidity)}</strong>
             </div>
             <div class="token-metric">
-              <span>1h Move</span>
+              <span>1h move</span>
               <strong>${formatPercent(token.priceChange1h)}</strong>
             </div>
           </div>
           <div class="token-footer">
             <div class="token-tags">
-              ${token.sources.map((source) => `<span class="source-chip">${escapeHtml(source)}</span>`).join("")}
+              ${token.sources.map((source) => `<span class="source-chip">${escapeHtml(formatSourceLabel(source))}</span>`).join("")}
             </div>
-            <span class="token-meta">${token.ageMinutes ? `${token.ageMinutes}m old` : "Listing time n/a"}</span>
+            <span class="token-meta">${formatRelativeAge(token.ageMinutes)}</span>
           </div>
         </article>
       `;
@@ -262,7 +262,8 @@ function renderDetail() {
         <div class="detail-headline">
           <div class="detail-logo">${renderLogo(token)}</div>
           <div class="detail-title">
-            <h3>${escapeHtml(token.symbol)} <span class="token-meta">${escapeHtml(token.name)}</span></h3>
+            <h3>${escapeHtml(token.symbol)}</h3>
+            <p class="detail-nameplate">${escapeHtml(token.name)}</p>
             <p>${escapeHtml(token.narrative)}</p>
           </div>
         </div>
@@ -271,7 +272,7 @@ function renderDetail() {
 
       <div class="detail-badges">
         <span class="verdict-chip ${verdictClassName(token.verdict)}">${escapeHtml(token.verdict)}</span>
-        ${token.sources.map((source) => `<span class="source-chip">${escapeHtml(source)}</span>`).join("")}
+        ${token.sources.map((source) => `<span class="source-chip">${escapeHtml(formatSourceLabel(source))}</span>`).join("")}
       </div>
 
       <div class="detail-score-grid">
@@ -389,7 +390,7 @@ function renderSpotlight(token) {
     <p class="spotlight-copy">${escapeHtml(token.narrative)}</p>
     <div class="detail-badges">
       <span class="verdict-chip ${verdictClassName(token.verdict)}">${escapeHtml(token.verdict)}</span>
-      ${token.sources.map((source) => `<span class="source-chip">${escapeHtml(source)}</span>`).join("")}
+      ${token.sources.map((source) => `<span class="source-chip">${escapeHtml(formatSourceLabel(source))}</span>`).join("")}
     </div>
     <div class="spotlight-grid">
       <div class="spotlight-metric">
@@ -397,7 +398,7 @@ function renderSpotlight(token) {
         <strong>${formatUsd(token.liquidity)}</strong>
       </div>
       <div class="spotlight-metric">
-        <span>1h Move</span>
+        <span>1h move</span>
         <strong>${formatPercent(token.priceChange1h)}</strong>
       </div>
       <div class="spotlight-metric">
@@ -406,7 +407,7 @@ function renderSpotlight(token) {
       </div>
       <div class="spotlight-metric">
         <span>Listed</span>
-        <strong>${token.ageMinutes ? `${token.ageMinutes}m ago` : "n/a"}</strong>
+        <strong>${formatRelativeAge(token.ageMinutes)}</strong>
       </div>
     </div>
   `;
@@ -506,6 +507,34 @@ function formatScore(value) {
 function formatInteger(value) {
   const numeric = Number(value || 0);
   return Number.isFinite(numeric) ? new Intl.NumberFormat("en-US").format(numeric) : "-";
+}
+
+function formatRelativeAge(ageMinutes) {
+  const numeric = Number(ageMinutes);
+  if (!Number.isFinite(numeric) || numeric < 0) {
+    return "Listing time n/a";
+  }
+  if (numeric < 60) {
+    return `${Math.max(1, Math.round(numeric))}m ago`;
+  }
+  const hours = Math.floor(numeric / 60);
+  if (hours < 24) {
+    return `${hours}h ago`;
+  }
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
+function formatSourceLabel(source) {
+  const normalized = String(source || "").trim().toLowerCase();
+  switch (normalized) {
+    case "new":
+      return "New";
+    case "trending":
+      return "Trending";
+    default:
+      return normalized ? normalized.charAt(0).toUpperCase() + normalized.slice(1) : "Source";
+  }
 }
 
 function verdictClassName(verdict) {
