@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LaunchLens | Solana Launch Radar</title>
+    <meta
+      name="description"
+      content="LaunchLens is a professional-grade Solana token discovery terminal powered by Birdeye Data."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css?v=20260420-3" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="site-header">
+        <div class="container header-inner">
+          <div class="brand">
+            <div class="brand-mark">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <div>
+              <p class="brand-name">LaunchLens</p>
+              <p class="brand-subtitle">Real-time Solana Launch Radar</p>
+            </div>
+          </div>
+          <div class="header-actions">
+            <button id="refreshButton" class="button button-primary" type="button">Refresh Radar</button>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <section class="hero">
+          <div class="container hero-grid">
+            <div class="hero-copy">
+              <p class="eyebrow">Live Solana discovery terminal</p>
+              <h1>Find the launches worth watching before the crowd gets comfortable.</h1>
+              <p class="hero-text">
+                LaunchLens combines Birdeye new listings, trending activity, liquidity quality,
+                wallet participation, and momentum data into a single ranked board that feels
+                ready for traders, analysts, and AI workflows.
+              </p>
+              <div class="hero-badges">
+                <span>Secure server-side API proxy</span>
+                <span>Multi-endpoint scoring engine</span>
+                <span>Decision-ready interface</span>
+              </div>
+              <div class="hero-note">
+                <span class="hero-note-kicker">Why LaunchLens</span>
+                <p>
+                  Built to turn noisy launch feeds into a ranked radar with enough context to move
+                  from discovery to conviction in seconds.
+                </p>
+              </div>
+            </div>
+            <div class="hero-panel">
+              <div class="hero-panel-top">
+                <p class="panel-label">System State</p>
+                <div class="hero-status-cluster">
+                  <p id="generatedAtHero" class="timestamp">Syncing live radar...</p>
+                  <p id="statusText" class="status-pill status-loading">Booting</p>
+                </div>
+              </div>
+              <section class="spotlight-card" id="spotlightCard">
+                <p class="eyebrow">Radar Spotlight</p>
+                <h3>Preparing the first ranked candidate...</h3>
+                <p class="token-name">
+                  As soon as the live feed resolves, the strongest launch setup will appear here.
+                </p>
+              </section>
+              <div class="hero-panel-grid">
+                <div class="hero-stat">
+                  <span>Leaderboard</span>
+                  <strong id="leaderToken">-</strong>
+                </div>
+                <div class="hero-stat">
+                  <span>Median Flight Score</span>
+                  <strong id="medianFlight">-</strong>
+                </div>
+                <div class="hero-stat">
+                  <span>Prime Setups</span>
+                  <strong id="primeSetups">-</strong>
+                </div>
+                <div class="hero-stat">
+                  <span>API Calls / Refresh</span>
+                  <strong id="apiCallEstimate">-</strong>
+                </div>
+              </div>
+              <section class="pulse-strip">
+                <div class="pulse-strip-head">
+                  <p class="panel-label">Signal Tape</p>
+                  <span class="token-meta">Fast scan of the strongest live candidates</span>
+                </div>
+                <div id="pulseStrip" class="pulse-strip-grid"></div>
+              </section>
+            </div>
+          </div>
+        </section>
+
+        <section class="controls">
+          <div class="container controls-inner">
+            <div class="control-group">
+              <label for="searchInput">Search</label>
+              <input id="searchInput" type="search" placeholder="Filter by token name or symbol" />
+            </div>
+            <div class="control-group">
+              <label for="sortSelect">Sort by</label>
+              <select id="sortSelect">
+                <option value="flightScore">Flight score</option>
+                <option value="securityScore">Quality score</option>
+                <option value="momentumScore">Momentum score</option>
+                <option value="structureScore">Structure score</option>
+                <option value="liquidity">Liquidity</option>
+                <option value="volume24h">24h volume</option>
+              </select>
+            </div>
+            <div class="control-group">
+              <label for="verdictSelect">Verdict</label>
+              <select id="verdictSelect">
+                <option value="all">All</option>
+                <option value="Prime Setup">Prime Setup</option>
+                <option value="Momentum Watch">Momentum Watch</option>
+                <option value="Clean Watchlist">Clean Watchlist</option>
+                <option value="High Beta">High Beta</option>
+                <option value="Speculative">Speculative</option>
+              </select>
+            </div>
+            <div class="control-group control-toggle">
+              <label for="memeToggle">Include meme platform listings</label>
+              <button id="memeToggle" class="toggle is-active" type="button" aria-pressed="true">
+                Enabled
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section class="metrics">
+          <div class="container metrics-grid" id="metricsGrid"></div>
+        </section>
+
+        <section class="board">
+          <div class="container board-grid">
+            <div class="board-panel">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Ranked Watchlist</p>
+                  <h2>Tokens worth a closer look right now</h2>
+                </div>
+                <p id="generatedAt" class="timestamp">Syncing live radar...</p>
+              </div>
+              <div id="warningStrip"></div>
+              <div id="tokenGrid" class="token-grid"></div>
+            </div>
+            <aside class="detail-panel" id="detailPanel">
+              <div class="detail-empty" id="detailEmpty">
+                <p class="eyebrow">Token Detail</p>
+                <h3>Select a token to inspect its setup.</h3>
+                <p>
+                  We will show the flight score breakdown, risk notes, catalysts, and a plain-English
+                  narrative to make the board easier to present and easier to trust.
+                </p>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="methodology">
+          <div class="container methodology-grid">
+            <div>
+              <p class="eyebrow">Scoring Logic</p>
+              <h2>Built for useful signal, not cosmetic ranking.</h2>
+              <p class="method-copy">
+                LaunchLens favors tokens that score well across three things at the same time:
+                healthy execution quality, expanding participation, and structure that can
+                absorb attention without immediately collapsing.
+              </p>
+            </div>
+            <div class="method-cards">
+              <article class="method-card">
+                <h3>Quality</h3>
+                <p>Liquidity depth, holder breadth, wallet participation, and market coverage.</p>
+              </article>
+              <article class="method-card">
+                <h3>Momentum</h3>
+                <p>Price acceleration, volume impulse, trade participation, and feed overlap.</p>
+              </article>
+              <article class="method-card">
+                <h3>Structure</h3>
+                <p>Freshness, liquidity support, market-cap shape, and distribution quality.</p>
+              </article>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/app.js?v=20260420-3" defer></script>
+  </body>
+</html>

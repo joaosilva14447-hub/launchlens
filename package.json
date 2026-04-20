@@ -1,0 +1,13 @@
+{
+  "name": "birdeye-launchlens",
+  "version": "1.0.0",
+  "private": true,
+  "description": "LaunchLens - real-time Solana token discovery dashboard powered by Birdeye Data",
+  "engines": {
+    "node": ">=20 <25"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "smoke": "node scripts/smoke.mjs"
+  }
+}

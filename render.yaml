@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: launchlens
+    runtime: node
+    plan: free
+    buildCommand: echo "No build step required"
+    startCommand: node server.js
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: BIRDEYE_API_KEY
+        sync: false
+      - key: BIRDEYE_CHAIN
+        value: solana
