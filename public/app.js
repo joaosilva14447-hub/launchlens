@@ -26,7 +26,6 @@ const elements = {
   leaderToken: document.getElementById("leaderToken"),
   medianFlight: document.getElementById("medianFlight"),
   primeSetups: document.getElementById("primeSetups"),
-  apiCallEstimate: document.getElementById("apiCallEstimate"),
   generatedAt: document.getElementById("generatedAt"),
   generatedAtHero: document.getElementById("generatedAtHero")
 };
@@ -59,16 +58,7 @@ async function loadDashboard(isManualRefresh) {
   elements.refreshButton.disabled = true;
 
   try {
-    const query = new URLSearchParams({
-      limit: "12",
-      includeMeme: String(state.includeMeme)
-    });
-    if (isManualRefresh) {
-      query.set("fresh", "1");
-      query.set("t", String(Date.now()));
-    }
-
-    const response = await fetch(`/api/dashboard?${query.toString()}`);
+    const response = await fetch(`/api/dashboard?limit=12&includeMeme=${state.includeMeme}`);
     const payload = await response.json();
 
     if (!response.ok || !payload.ok) {
@@ -107,9 +97,6 @@ function hydrateSummary(payload) {
   elements.leaderToken.textContent = payload.pulse?.leaderboardLeader?.symbol || "-";
   elements.medianFlight.textContent = formatScore(payload.pulse?.medianFlightScore);
   elements.primeSetups.textContent = String(payload.pulse?.primeSetups || 0);
-  elements.apiCallEstimate.textContent = payload.apiUsage
-    ? `${formatInteger(payload.apiUsage.totalCalls)} / ${formatInteger(payload.apiUsage.threshold)}`
-    : "-";
 
   const generatedText = payload.generatedAt
     ? `Updated ${new Date(payload.generatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
@@ -141,11 +128,9 @@ function hydrateSummary(payload) {
         : "Sync pending."
     },
     {
-      label: "Qualification",
-      value: payload.apiUsage?.thresholdReached ? "Reached" : "In progress",
-      detail: payload.apiUsage
-        ? `${formatInteger(payload.apiUsage.totalCalls)} live Birdeye calls observed. Latest refresh: ${formatInteger(payload.apiUsage.lastRefreshCalls || 0)}.`
-        : "Usage tracking pending."
+      label: "Radar Quality",
+      value: formatScore(payload.pulse?.avgSafety),
+      detail: `${payload.endpointsUsed?.length || 0} Birdeye endpoints per refresh.`
     }
   ];
 
