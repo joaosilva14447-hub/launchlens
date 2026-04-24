@@ -5,6 +5,9 @@ const { URL } = require("node:url");
 
 const ROOT = __dirname;
 const PUBLIC_DIR = path.join(ROOT, "public");
+const DATA_DIR = path.join(ROOT, "data");
+const SNAPSHOT_FILE = path.join(DATA_DIR, "last-successful-dashboard.json");
+const SEED_SNAPSHOT_FILE = path.join(DATA_DIR, "seed-dashboard.json");
 const DEFAULT_CHAIN = "solana";
 const PORT = Number(process.env.PORT || 3000);
 const API_BASE_URL = "https://public-api.birdeye.so";
@@ -36,7 +39,17 @@ const server = http.createServer(async (req, res) => {
       const chain = sanitizeChain(requestUrl.searchParams.get("chain") || CONFIG.chain);
       const limit = clampInteger(requestUrl.searchParams.get("limit"), 6, 16, 12);
       const includeMeme = parseBoolean(requestUrl.searchParams.get("includeMeme"), true);
-      const dashboard = await buildDashboard({ chain, limit, includeMeme });
+      let dashboard;
+      try {
+        dashboard = await buildDashboard({ chain, limit, includeMeme });
+      } catch (error) {
+        const snapshot = loadFallbackSnapshot();
+        if (snapshot && isBirdeyeCapacityError(error)) {
+          dashboard = buildSnapshotFallbackResponse(snapshot, error);
+        } else {
+          throw error;
+        }
+      }
       return sendJson(res, 200, dashboard);
     }
 
@@ -183,7 +196,7 @@ async function buildDashboard({ chain, limit, includeMeme }) {
       .map((token) => finalizeToken(token))
       .sort((a, b) => b.flightScore - a.flightScore);
 
-    return {
+    const response = {
       ok: true,
       product: {
         name: "LaunchLens",
@@ -209,6 +222,8 @@ async function buildDashboard({ chain, limit, includeMeme }) {
       warnings,
       tokens: scoredTokens
     };
+    persistDashboardSnapshot(response);
+    return response;
   });
 }
 
@@ -714,6 +729,55 @@ function estimateApiCalls(tokenCount) {
     perRefresh: 2 + tokenCount,
     note: "A few manual refreshes plus normal exploration comfortably exceed the 50-call submission threshold."
   };
+}
+
+function isBirdeyeCapacityError(error) {
+  const message = String(error?.message || "").toLowerCase();
+  return (
+    error?.statusCode === 429 ||
+    message.includes("too many requests") ||
+    message.includes("compute units usage limit exceeded") ||
+    message.includes("rate limit")
+  );
+}
+
+function loadFallbackSnapshot() {
+  for (const filePath of [SNAPSHOT_FILE, SEED_SNAPSHOT_FILE]) {
+    try {
+      if (!fs.existsSync(filePath)) {
+        continue;
+      }
+      const content = fs.readFileSync(filePath, "utf8");
+      const parsed = JSON.parse(content);
+      if (parsed && parsed.ok && Array.isArray(parsed.tokens) && parsed.tokens.length) {
+        return parsed;
+      }
+    } catch (error) {
+      continue;
+    }
+  }
+  return null;
+}
+
+function persistDashboardSnapshot(snapshot) {
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(SNAPSHOT_FILE, JSON.stringify(snapshot, null, 2), "utf8");
+  } catch (error) {
+    // Best-effort only.
+  }
+}
+
+function buildSnapshotFallbackResponse(snapshot, error) {
+  const clone = JSON.parse(JSON.stringify(snapshot));
+  const warnings = Array.isArray(clone.warnings) ? clone.warnings.slice() : [];
+  warnings.unshift("Live Birdeye capacity is temporarily constrained, so LaunchLens is showing the latest available snapshot.");
+  if (error?.message) {
+    warnings.push(error.message);
+  }
+  clone.ok = true;
+  clone.warnings = warnings;
+  return clone;
 }
 
 function seedCandidateRank(candidate) {

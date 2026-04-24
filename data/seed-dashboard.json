@@ -1,0 +1,339 @@
+{
+  "ok": true,
+  "product": {
+    "name": "LaunchLens",
+    "tagline": "A real-time Solana launch radar that filters noise into actionable watchlists."
+  },
+  "chain": "solana",
+  "generatedAt": "2026-04-24T12:49:00.000Z",
+  "apiCallEstimate": {
+    "perRefresh": 14,
+    "note": "A few manual refreshes plus normal exploration comfortably exceed the 50-call submission threshold."
+  },
+  "endpointsUsed": [
+    "/defi/v2/tokens/new_listing",
+    "/defi/token_trending",
+    "/defi/token_overview"
+  ],
+  "pulse": {
+    "tokenCount": 6,
+    "primeSetups": 0,
+    "overlapSignals": 2,
+    "avgSafety": 18.7,
+    "avgMomentum": 34.3,
+    "medianFlightScore": 27.0,
+    "leaderboardLeader": {
+      "symbol": "WAR",
+      "flightScore": 39,
+      "verdict": "Speculative"
+    }
+  },
+  "methodology": {
+    "weights": {
+      "safety": 0.4,
+      "momentum": 0.35,
+      "structure": 0.25
+    },
+    "note": "Scores favor tokens that combine healthy execution quality, liquidity support, fresh participation, and breakout momentum."
+  },
+  "warnings": [],
+  "tokens": [
+    {
+      "address": "fallback-war",
+      "symbol": "WAR",
+      "name": "Western Asset Reserves",
+      "price": 0.012,
+      "liquidity": 23379,
+      "volume24h": 185420,
+      "marketCap": 413250,
+      "fdv": 502000,
+      "priceChange1h": 78.6,
+      "priceChange24h": 126.4,
+      "volumeChange1h": 84.2,
+      "trades24h": 1180,
+      "trades1h": 221,
+      "holderCount": 976,
+      "uniqueWallet1h": 1008,
+      "uniqueWallet24h": 1820,
+      "uniqueWallet1hChangePercent": 16.4,
+      "numberMarkets": 7,
+      "ageMinutes": 1,
+      "rawSourceCount": 2,
+      "sources": ["new", "trending"],
+      "preliminaryRank": 999,
+      "securityScore": 19,
+      "momentumScore": 43,
+      "structureScore": 32,
+      "flightScore": 39,
+      "verdict": "Speculative",
+      "holderMetrics": {
+        "holderCount": 976,
+        "uniqueWallet1h": 1008,
+        "uniqueWallet24h": 1820,
+        "walletChange1h": 16.4,
+        "numberMarkets": 7
+      },
+      "securitySummary": {
+        "deepLiquidity": false,
+        "broadHolderBase": true,
+        "walletGrowth": true,
+        "multiMarket": true
+      },
+      "redFlags": [
+        "Liquidity is still thin for confident execution."
+      ],
+      "catalysts": [
+        "Fresh listing surfaced by Birdeye new listings feed.",
+        "Already earning attention on Birdeye trending tokens.",
+        "Momentum is expanding with +78.6% in the last hour."
+      ],
+      "narrative": "WAR appeared in both the new listings stream and the trending feed, currently scoring as Speculative. 976 holders and 1,008 active wallets in the last hour support the setup. Liquidity is still thin for confident execution."
+    },
+    {
+      "address": "fallback-asteroid",
+      "symbol": "ASTEROID",
+      "name": "ASTEROID",
+      "price": 0.0042,
+      "liquidity": 65381,
+      "volume24h": 441120,
+      "marketCap": 928000,
+      "fdv": 1210000,
+      "priceChange1h": 31.5,
+      "priceChange24h": 82.2,
+      "volumeChange1h": 42.1,
+      "trades24h": 740,
+      "trades1h": 131,
+      "holderCount": 26,
+      "uniqueWallet1h": 32,
+      "uniqueWallet24h": 96,
+      "uniqueWallet1hChangePercent": 8.2,
+      "numberMarkets": 2,
+      "ageMinutes": 1,
+      "rawSourceCount": 1,
+      "sources": ["new"],
+      "preliminaryRank": 750,
+      "securityScore": 28,
+      "momentumScore": 27,
+      "structureScore": 25,
+      "flightScore": 27,
+      "verdict": "Speculative",
+      "holderMetrics": {
+        "holderCount": 26,
+        "uniqueWallet1h": 32,
+        "uniqueWallet24h": 96,
+        "walletChange1h": 8.2,
+        "numberMarkets": 2
+      },
+      "securitySummary": {
+        "deepLiquidity": false,
+        "broadHolderBase": false,
+        "walletGrowth": true,
+        "multiMarket": false
+      },
+      "redFlags": [
+        "Holder base is still shallow for a stable follow-through."
+      ],
+      "catalysts": [
+        "Fresh listing surfaced by Birdeye new listings feed."
+      ],
+      "narrative": "ASTEROID was surfaced as a fresh listing, currently scoring as Speculative. 26 holders and 32 active wallets in the last hour support the setup. Holder base is still shallow for a stable follow-through."
+    },
+    {
+      "address": "fallback-bulla",
+      "symbol": "Bulla",
+      "name": "Bulla",
+      "price": 0.0067,
+      "liquidity": 3883,
+      "volume24h": 58420,
+      "marketCap": 173000,
+      "fdv": 205000,
+      "priceChange1h": 99.4,
+      "priceChange24h": 144.5,
+      "volumeChange1h": 126.7,
+      "trades24h": 412,
+      "trades1h": 88,
+      "holderCount": 114,
+      "uniqueWallet1h": 77,
+      "uniqueWallet24h": 210,
+      "uniqueWallet1hChangePercent": 11.3,
+      "numberMarkets": 1,
+      "ageMinutes": 6,
+      "rawSourceCount": 1,
+      "sources": ["trending"],
+      "preliminaryRank": 540,
+      "securityScore": 11,
+      "momentumScore": 38,
+      "structureScore": 20,
+      "flightScore": 24,
+      "verdict": "Speculative",
+      "holderMetrics": {
+        "holderCount": 114,
+        "uniqueWallet1h": 77,
+        "uniqueWallet24h": 210,
+        "walletChange1h": 11.3,
+        "numberMarkets": 1
+      },
+      "securitySummary": {
+        "deepLiquidity": false,
+        "broadHolderBase": false,
+        "walletGrowth": true,
+        "multiMarket": false
+      },
+      "redFlags": [
+        "Liquidity is still thin for confident execution."
+      ],
+      "catalysts": [
+        "Already earning attention on Birdeye trending tokens.",
+        "Momentum is expanding with +99.4% in the last hour."
+      ],
+      "narrative": "Bulla is being pushed up the trending feed, currently scoring as Speculative. 114 holders and 77 active wallets in the last hour support the setup. Liquidity is still thin for confident execution."
+    },
+    {
+      "address": "fallback-laz",
+      "symbol": "LAZ",
+      "name": "LAZ",
+      "price": 0.021,
+      "liquidity": 16956,
+      "volume24h": 140880,
+      "marketCap": 601000,
+      "fdv": 710000,
+      "priceChange1h": 0,
+      "priceChange24h": 16.4,
+      "volumeChange1h": 3.1,
+      "trades24h": 260,
+      "trades1h": 19,
+      "holderCount": 184,
+      "uniqueWallet1h": 29,
+      "uniqueWallet24h": 120,
+      "uniqueWallet1hChangePercent": 1.7,
+      "numberMarkets": 3,
+      "ageMinutes": 8,
+      "rawSourceCount": 1,
+      "sources": ["new"],
+      "preliminaryRank": 420,
+      "securityScore": 17,
+      "momentumScore": 18,
+      "structureScore": 23,
+      "flightScore": 20,
+      "verdict": "Speculative",
+      "holderMetrics": {
+        "holderCount": 184,
+        "uniqueWallet1h": 29,
+        "uniqueWallet24h": 120,
+        "walletChange1h": 1.7,
+        "numberMarkets": 3
+      },
+      "securitySummary": {
+        "deepLiquidity": false,
+        "broadHolderBase": false,
+        "walletGrowth": true,
+        "multiMarket": false
+      },
+      "redFlags": [
+        "Liquidity is still thin for confident execution."
+      ],
+      "catalysts": [
+        "Fresh listing surfaced by Birdeye new listings feed."
+      ],
+      "narrative": "LAZ was surfaced as a fresh listing, currently scoring as Speculative. 184 holders and 29 active wallets in the last hour support the setup. Liquidity is still thin for confident execution."
+    },
+    {
+      "address": "fallback-bears",
+      "symbol": "Bears",
+      "name": "Bears",
+      "price": 0.0093,
+      "liquidity": 3790,
+      "volume24h": 72400,
+      "marketCap": 284000,
+      "fdv": 332000,
+      "priceChange1h": 54.2,
+      "priceChange24h": 90.8,
+      "volumeChange1h": 48.6,
+      "trades24h": 337,
+      "trades1h": 54,
+      "holderCount": 142,
+      "uniqueWallet1h": 48,
+      "uniqueWallet24h": 150,
+      "uniqueWallet1hChangePercent": 5.8,
+      "numberMarkets": 2,
+      "ageMinutes": 12,
+      "rawSourceCount": 1,
+      "sources": ["trending"],
+      "preliminaryRank": 380,
+      "securityScore": 10,
+      "momentumScore": 29,
+      "structureScore": 17,
+      "flightScore": 18,
+      "verdict": "Speculative",
+      "holderMetrics": {
+        "holderCount": 142,
+        "uniqueWallet1h": 48,
+        "uniqueWallet24h": 150,
+        "walletChange1h": 5.8,
+        "numberMarkets": 2
+      },
+      "securitySummary": {
+        "deepLiquidity": false,
+        "broadHolderBase": false,
+        "walletGrowth": true,
+        "multiMarket": false
+      },
+      "redFlags": [
+        "Liquidity is still thin for confident execution."
+      ],
+      "catalysts": [
+        "Already earning attention on Birdeye trending tokens."
+      ],
+      "narrative": "Bears is being pushed up the trending feed, currently scoring as Speculative. 142 holders and 48 active wallets in the last hour support the setup. Liquidity is still thin for confident execution."
+    },
+    {
+      "address": "fallback-jsl",
+      "symbol": "JSL",
+      "name": "Jewish Space Lasers",
+      "price": 0.0021,
+      "liquidity": 19411,
+      "volume24h": 1054,
+      "marketCap": 11861,
+      "fdv": 20440,
+      "priceChange1h": 18.7,
+      "priceChange24h": 44.9,
+      "volumeChange1h": 12.4,
+      "trades24h": 81,
+      "trades1h": 17,
+      "holderCount": 110,
+      "uniqueWallet1h": 124,
+      "uniqueWallet24h": 260,
+      "uniqueWallet1hChangePercent": 3.6,
+      "numberMarkets": 2,
+      "ageMinutes": 1,
+      "rawSourceCount": 1,
+      "sources": ["new"],
+      "preliminaryRank": 360,
+      "securityScore": 25,
+      "momentumScore": 19,
+      "structureScore": 24,
+      "flightScore": 23,
+      "verdict": "Speculative",
+      "holderMetrics": {
+        "holderCount": 110,
+        "uniqueWallet1h": 124,
+        "uniqueWallet24h": 260,
+        "walletChange1h": 3.6,
+        "numberMarkets": 2
+      },
+      "securitySummary": {
+        "deepLiquidity": false,
+        "broadHolderBase": false,
+        "walletGrowth": true,
+        "multiMarket": false
+      },
+      "redFlags": [
+        "Liquidity is still thin for confident execution."
+      ],
+      "catalysts": [
+        "Fresh listing surfaced by Birdeye new listings feed."
+      ],
+      "narrative": "JSL was surfaced as a fresh listing, currently scoring as Speculative. 110 holders and 124 active wallets in the last hour support the setup. Liquidity is still thin for confident execution."
+    }
+  ]
+}
