@@ -26,6 +26,7 @@ const elements = {
   leaderToken: document.getElementById("leaderToken"),
   medianFlight: document.getElementById("medianFlight"),
   primeSetups: document.getElementById("primeSetups"),
+  apiCallEstimate: document.getElementById("apiCallEstimate"),
   generatedAt: document.getElementById("generatedAt"),
   generatedAtHero: document.getElementById("generatedAtHero")
 };
@@ -97,6 +98,7 @@ function hydrateSummary(payload) {
   elements.leaderToken.textContent = payload.pulse?.leaderboardLeader?.symbol || "-";
   elements.medianFlight.textContent = formatScore(payload.pulse?.medianFlightScore);
   elements.primeSetups.textContent = String(payload.pulse?.primeSetups || 0);
+  elements.apiCallEstimate.textContent = String(payload.apiCallEstimate?.perRefresh || "-");
 
   const generatedText = payload.generatedAt
     ? `Updated ${new Date(payload.generatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
