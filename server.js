@@ -9,6 +9,7 @@ const DEFAULT_CHAIN = "solana";
 const PORT = Number(process.env.PORT || 3000);
 const API_BASE_URL = "https://public-api.birdeye.so";
 const cache = new Map();
+const dashboardSnapshots = new Map();
 const API_CALL_THRESHOLD = 50;
 const apiUsage = {
   totalCalls: 0,
@@ -132,12 +133,14 @@ async function buildDashboard({ chain, limit, includeMeme, forceLive = false }) 
   }
 
   const cacheKey = `dashboard:${chain}:${limit}:${includeMeme}`;
+  const staleSnapshot = dashboardSnapshots.get(cacheKey);
   const usageContext = createUsageContext(forceLive);
   const build = async () => {
     const warnings = [];
+    const sourceLimit = Math.max(limit + 2, 12);
     const [listingsResult, trendingResult] = await Promise.allSettled([
-      getNewListings({ chain, limit: 20, includeMeme, forceLive, usageContext }),
-      getTrending({ chain, limit: 20, interval: "1h", forceLive, usageContext })
+      getNewListings({ chain, limit: sourceLimit, includeMeme, forceLive, usageContext }),
+      getTrending({ chain, limit: sourceLimit, interval: "1h", forceLive, usageContext })
     ]);
 
     if (listingsResult.status !== "fulfilled") {
@@ -163,7 +166,7 @@ async function buildDashboard({ chain, limit, includeMeme, forceLive = false }) 
     const candidates = Array.from(candidateMap.values());
     const seedCandidates = candidates
       .sort((left, right) => seedCandidateRank(right) - seedCandidateRank(left))
-      .slice(0, Math.max(limit + 4, 10));
+      .slice(0, Math.max(limit + 2, 10));
 
     const overviewEntries = await runPool(
       seedCandidates,
@@ -194,7 +197,7 @@ async function buildDashboard({ chain, limit, includeMeme, forceLive = false }) 
       .map((token) => finalizeToken(token))
       .sort((a, b) => b.flightScore - a.flightScore);
 
-    return {
+    const response = {
       ok: true,
       product: {
         name: "LaunchLens",
@@ -220,13 +223,22 @@ async function buildDashboard({ chain, limit, includeMeme, forceLive = false }) 
       warnings,
       tokens: scoredTokens
     };
+    dashboardSnapshots.set(cacheKey, response);
+    return response;
   };
 
-  if (forceLive) {
-    return build();
-  }
+  try {
+    if (forceLive) {
+      return await build();
+    }
 
-  return withCache(cacheKey, 45_000, build);
+    return await withCache(cacheKey, 45_000, build);
+  } catch (error) {
+    if (staleSnapshot && isBirdeyeCapacityError(error)) {
+      return buildStaleDashboardResponse(staleSnapshot, usageContext, error);
+    }
+    throw error;
+  }
 }
 
 function sanitizeChain(chain) {
@@ -785,6 +797,30 @@ function finalizeUsageSnapshot(usageContext) {
       ? "Birdeye qualification threshold reached."
       : "Use manual Refresh Radar to generate additional live Birdeye calls until the threshold is reached."
   };
+}
+
+function isBirdeyeCapacityError(error) {
+  const message = String(error?.message || "").toLowerCase();
+  return (
+    error?.statusCode === 429 ||
+    message.includes("too many requests") ||
+    message.includes("compute units usage limit exceeded") ||
+    message.includes("rate limit")
+  );
+}
+
+function buildStaleDashboardResponse(snapshot, usageContext, error) {
+  const clone = JSON.parse(JSON.stringify(snapshot));
+  const warnings = Array.isArray(clone.warnings) ? clone.warnings.slice() : [];
+  warnings.unshift("Live refresh hit the current Birdeye rate or compute limit, so LaunchLens is showing the latest successful snapshot.");
+  if (error?.message) {
+    warnings.push(error.message);
+  }
+
+  clone.ok = true;
+  clone.warnings = warnings;
+  clone.apiUsage = finalizeUsageSnapshot(usageContext);
+  return clone;
 }
 
 function seedCandidateRank(candidate) {
