@@ -9,6 +9,15 @@ const DEFAULT_CHAIN = "solana";
 const PORT = Number(process.env.PORT || 3000);
 const API_BASE_URL = "https://public-api.birdeye.so";
 const cache = new Map();
+const API_CALL_THRESHOLD = 50;
+const apiUsage = {
+  totalCalls: 0,
+  totalSuccessfulCalls: 0,
+  refreshCount: 0,
+  lastRefreshCalls: 0,
+  qualifiedAt: null,
+  callsByEndpoint: {}
+};
 
 loadEnv(path.join(ROOT, ".env"));
 loadEnv(path.join(ROOT, ".env.local"));
@@ -36,7 +45,8 @@ const server = http.createServer(async (req, res) => {
       const chain = sanitizeChain(requestUrl.searchParams.get("chain") || CONFIG.chain);
       const limit = clampInteger(requestUrl.searchParams.get("limit"), 6, 16, 12);
       const includeMeme = parseBoolean(requestUrl.searchParams.get("includeMeme"), true);
-      const dashboard = await buildDashboard({ chain, limit, includeMeme });
+      const forceLive = parseBoolean(requestUrl.searchParams.get("fresh"), false);
+      const dashboard = await buildDashboard({ chain, limit, includeMeme, forceLive });
       return sendJson(res, 200, dashboard);
     }
 
@@ -114,7 +124,7 @@ function serveStatic(res, pathname) {
   res.end(content);
 }
 
-async function buildDashboard({ chain, limit, includeMeme }) {
+async function buildDashboard({ chain, limit, includeMeme, forceLive = false }) {
   if (!CONFIG.apiKey) {
     const error = new Error("Missing BIRDEYE_API_KEY. Add it to .env.local before calling the dashboard.");
     error.statusCode = 500;
@@ -122,11 +132,12 @@ async function buildDashboard({ chain, limit, includeMeme }) {
   }
 
   const cacheKey = `dashboard:${chain}:${limit}:${includeMeme}`;
-  return withCache(cacheKey, 45_000, async () => {
+  const usageContext = createUsageContext(forceLive);
+  const build = async () => {
     const warnings = [];
     const [listingsResult, trendingResult] = await Promise.allSettled([
-      getNewListings({ chain, limit: 20, includeMeme }),
-      getTrending({ chain, limit: 20, interval: "1h" })
+      getNewListings({ chain, limit: 20, includeMeme, forceLive, usageContext }),
+      getTrending({ chain, limit: 20, interval: "1h", forceLive, usageContext })
     ]);
 
     if (listingsResult.status !== "fulfilled") {
@@ -159,7 +170,7 @@ async function buildDashboard({ chain, limit, includeMeme }) {
       1,
       async (candidate) => [
         candidate.address,
-        await safeRequest(() => getOverviewSnapshot(candidate.address, chain), null)
+        await safeRequest(() => getOverviewSnapshot(candidate.address, chain, { forceLive, usageContext }), null)
       ]
     );
 
@@ -191,7 +202,7 @@ async function buildDashboard({ chain, limit, includeMeme }) {
       },
       chain,
       generatedAt: new Date().toISOString(),
-      apiCallEstimate: estimateApiCalls(scoredTokens.length),
+      apiUsage: finalizeUsageSnapshot(usageContext),
       endpointsUsed: [
         "/defi/v2/tokens/new_listing",
         "/defi/token_trending",
@@ -209,7 +220,13 @@ async function buildDashboard({ chain, limit, includeMeme }) {
       warnings,
       tokens: scoredTokens
     };
-  });
+  };
+
+  if (forceLive) {
+    return build();
+  }
+
+  return withCache(cacheKey, 45_000, build);
 }
 
 function sanitizeChain(chain) {
@@ -240,7 +257,8 @@ function parseBoolean(value, fallback) {
   return fallback;
 }
 
-async function birdeyeGet(endpoint, params, chain, ttlMs) {
+async function birdeyeGet(endpoint, params, chain, ttlMs, options = {}) {
+  const { forceLive = false, usageContext = null } = options;
   const search = new URLSearchParams();
   for (const [key, value] of Object.entries(params || {})) {
     if (value !== undefined && value !== null && value !== "") {
@@ -252,10 +270,11 @@ async function birdeyeGet(endpoint, params, chain, ttlMs) {
   const url = `${API_BASE_URL}${endpoint}${query ? `?${query}` : ""}`;
   const cacheKey = `bird:${chain}:${endpoint}:${query}`;
 
-  return withCache(cacheKey, ttlMs, async () => {
+  const requestFactory = async () => {
     let lastError = null;
 
     for (let attempt = 0; attempt < 3; attempt += 1) {
+      registerBirdeyeCall(endpoint, usageContext);
       const response = await fetch(url, {
         method: "GET",
         headers: {
@@ -289,17 +308,27 @@ async function birdeyeGet(endpoint, params, chain, ttlMs) {
         throw requestError;
       }
 
+      apiUsage.totalSuccessfulCalls += 1;
       return payload;
     }
 
     throw lastError || new Error(`Birdeye request failed for ${endpoint}`);
-  });
+  };
+
+  if (forceLive) {
+    return requestFactory();
+  }
+
+  return withCache(cacheKey, ttlMs, requestFactory, usageContext);
 }
 
-function withCache(key, ttlMs, factory) {
+function withCache(key, ttlMs, factory, usageContext = null) {
   const now = Date.now();
   const existing = cache.get(key);
   if (existing && existing.expiresAt > now) {
+    if (usageContext) {
+      usageContext.cacheHits += 1;
+    }
     return existing.value instanceof Promise ? existing.value : Promise.resolve(existing.value);
   }
 
@@ -387,7 +416,7 @@ function registerCandidate(candidateMap, rawItem, source) {
   candidateMap.set(address, existing);
 }
 
-async function getNewListings({ chain, limit, includeMeme }) {
+async function getNewListings({ chain, limit, includeMeme, forceLive = false, usageContext = null }) {
   return birdeyeGet(
     "/defi/v2/tokens/new_listing",
     {
@@ -396,11 +425,12 @@ async function getNewListings({ chain, limit, includeMeme }) {
       meme_platform_enabled: includeMeme
     },
     chain,
-    30_000
+    30_000,
+    { forceLive, usageContext }
   );
 }
 
-async function getTrending({ chain, limit, interval }) {
+async function getTrending({ chain, limit, interval, forceLive = false, usageContext = null }) {
   return birdeyeGet(
     "/defi/token_trending",
     {
@@ -412,11 +442,12 @@ async function getTrending({ chain, limit, interval }) {
       ui_amount_mode: "scaled"
     },
     chain,
-    30_000
+    30_000,
+    { forceLive, usageContext }
   );
 }
 
-async function getOverviewSnapshot(address, chain) {
+async function getOverviewSnapshot(address, chain, options = {}) {
   const payload = await birdeyeGet(
     "/defi/token_overview",
     {
@@ -425,7 +456,8 @@ async function getOverviewSnapshot(address, chain) {
       ui_amount_mode: "scaled"
     },
     chain,
-    75_000
+    75_000,
+    options
   );
   return payload.data || null;
 }
@@ -709,10 +741,49 @@ function buildPulseSummary(tokens) {
   };
 }
 
-function estimateApiCalls(tokenCount) {
+function createUsageContext(forceLive = false) {
   return {
-    perRefresh: 2 + tokenCount,
-    note: "A few manual refreshes plus normal exploration comfortably exceed the 50-call submission threshold."
+    forceLive: Boolean(forceLive),
+    networkCalls: 0,
+    cacheHits: 0,
+    endpointCalls: {}
+  };
+}
+
+function registerBirdeyeCall(endpoint, usageContext) {
+  apiUsage.totalCalls += 1;
+  apiUsage.callsByEndpoint[endpoint] = (apiUsage.callsByEndpoint[endpoint] || 0) + 1;
+
+  if (!apiUsage.qualifiedAt && apiUsage.totalCalls >= API_CALL_THRESHOLD) {
+    apiUsage.qualifiedAt = new Date().toISOString();
+  }
+
+  if (usageContext) {
+    usageContext.networkCalls += 1;
+    usageContext.endpointCalls[endpoint] = (usageContext.endpointCalls[endpoint] || 0) + 1;
+  }
+}
+
+function finalizeUsageSnapshot(usageContext) {
+  apiUsage.refreshCount += 1;
+  apiUsage.lastRefreshCalls = usageContext?.networkCalls || 0;
+
+  return {
+    totalCalls: apiUsage.totalCalls,
+    totalSuccessfulCalls: apiUsage.totalSuccessfulCalls,
+    lastRefreshCalls: apiUsage.lastRefreshCalls,
+    refreshCount: apiUsage.refreshCount,
+    threshold: API_CALL_THRESHOLD,
+    thresholdReached: apiUsage.totalCalls >= API_CALL_THRESHOLD,
+    remainingToThreshold: Math.max(0, API_CALL_THRESHOLD - apiUsage.totalCalls),
+    qualifiedAt: apiUsage.qualifiedAt,
+    cacheHits: usageContext?.cacheHits || 0,
+    forceLive: Boolean(usageContext?.forceLive),
+    endpointsThisRefresh: usageContext?.endpointCalls || {},
+    callsByEndpoint: apiUsage.callsByEndpoint,
+    note: apiUsage.totalCalls >= API_CALL_THRESHOLD
+      ? "Birdeye qualification threshold reached."
+      : "Use manual Refresh Radar to generate additional live Birdeye calls until the threshold is reached."
   };
 }
 
